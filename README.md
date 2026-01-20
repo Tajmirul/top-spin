@@ -1,4 +1,4 @@
-# Table Tennis Ranker
+# TopSpin
 
 A landing page to validate interest in a table tennis ranking application for Strativ employees. Collect emails from interested users to gauge demand before building the full application.
 

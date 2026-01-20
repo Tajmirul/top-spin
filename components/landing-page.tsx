@@ -77,8 +77,8 @@ export function LandingPage() {
           />
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white max-sm:mb-2">
-            Table Tennis Ranker
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold text-white mb-3">
+            TopSpin
           </h1>
 
           <p className="text-lg sm:text-2xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, TrendingUp } from "lucide-react";
 import { InterestModal } from "./interest-modal";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
 
 export function LandingPage() {
@@ -39,7 +40,7 @@ export function LandingPage() {
               Ranking revolution! Your interest helps us validate this idea and
               build something awesome.
             </p>
-            <div className="bg-zinc-800 p-6 border border-zinc-700">
+            <div className="bg-zinc-800 p-4 border border-zinc-700">
               <h3 className="font-semibold mb-3 text-white text-lg">
                 What happens next?
               </h3>
@@ -87,13 +88,21 @@ export function LandingPage() {
           </p>
 
           {/* CTA Button */}
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              size="lg"
+              onClick={() => signIn("google")}
+              className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
+            >
+              Sign in with Google
+            </Button>
             <Button
               size="lg"
               onClick={() => setIsModalOpen(true)}
-              className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
+              variant="outline"
+              className="text-lg px-8 py-6 "
             >
-              I&apos;m Interested - Join Waitlist
+              Join Waitlist
             </Button>
           </div>
         </div>
@@ -148,7 +157,7 @@ export function LandingPage() {
 
         {/* How It Works */}
         <div className="mt-24 max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-12 text-white">
+          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-12 text-white">
             How It Works
           </h2>
 

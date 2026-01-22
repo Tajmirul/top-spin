@@ -47,12 +47,12 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --background: oklch(0.14 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.2103 0.0059 285.89);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.2103 0.0059 285.89);
+  --popover-foreground: oklch(1 0 0);
   --primary: oklch(0.79 0.34 145.55);
   --primary-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.97 0 0);
@@ -62,7 +62,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.2739 0.0055 286.03);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
@@ -120,5 +120,35 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Custom Scrollbar Styles */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.269 0 0) oklch(0.145 0 0);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: oklch(0.145 0 0);
+    border-radius: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: oklch(0.269 0 0);
+    border-radius: 10px;
+    border: 2px solid oklch(0.145 0 0);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.79 0.34 145.55);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: oklch(0.145 0 0);
   }
 }

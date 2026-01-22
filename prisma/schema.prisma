@@ -18,3 +18,129 @@ model InterestedUser {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  name               String?         // Optional - populated on first sign-in
+  image              String?
+  rating             Int             @default(1500)
+  matchesSubmitted   Match[]         @relation("SubmittedBy")
+  matchesAsWinner1   Match[]         @relation("Winner1")
+  matchesAsWinner2   Match[]         @relation("Winner2")
+  matchesAsLoser1    Match[]         @relation("Loser1")
+  matchesAsLoser2    Match[]         @relation("Loser2")
+  challengesSent     Challenge[]     @relation("Challenger")
+  challengesReceived Challenge[]     @relation("Challenged")
+  challengesAsPartner Challenge[]    @relation("Partner")
+  challengesAsOpponent2 Challenge[]  @relation("Challenged2")
+  ratingHistory      RatingHistory[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([rating])
+  @@index([email])
+}
+
+model Challenge {
+  id            String          @id @default(cuid())
+  matchType     MatchType       @default(SINGLES)
+  
+  challengerId  String
+  partnerId     String?         // For doubles - challenger's partner
+  challengedId  String          // First opponent
+  challengedId2 String?         // Second opponent for doubles
+  
+  status        ChallengeStatus @default(PENDING)
+  message       String?
+  
+  challenger    User            @relation("Challenger", fields: [challengerId], references: [id])
+  partner       User?           @relation("Partner", fields: [partnerId], references: [id])
+  challenged    User            @relation("Challenged", fields: [challengedId], references: [id])
+  challenged2   User?           @relation("Challenged2", fields: [challengedId2], references: [id])
+  
+  match         Match?
+  createdAt     DateTime        @default(now())
+  respondedAt   DateTime?
+  expiresAt     DateTime        // Auto-expire after 7 days
+
+  @@index([challengerId])
+  @@index([challengedId])
+  @@index([challengedId2])
+  @@index([status])
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Match {
+  id          String    @id @default(cuid())
+  challengeId String?   @unique
+  matchType   MatchType @default(SINGLES)
+  submittedById String?  // User who submitted/reported this match
+
+  // Players (winner2 and loser2 are null for 1v1)
+  winner1Id String
+  winner2Id String?
+  loser1Id  String
+  loser2Id  String?
+
+  // Scores
+  winnerScore Int
+  loserScore  Int
+
+  // Status and rating changes
+  status              MatchStatus @default(PENDING)
+  winner1RatingChange Int?
+  winner2RatingChange Int?
+  loser1RatingChange  Int?
+  loser2RatingChange  Int?
+
+  // Relations
+  submittedBy   User?           @relation("SubmittedBy", fields: [submittedById], references: [id])
+  winner1       User            @relation("Winner1", fields: [winner1Id], references: [id])
+  winner2       User?           @relation("Winner2", fields: [winner2Id], references: [id])
+  loser1        User            @relation("Loser1", fields: [loser1Id], references: [id])
+  loser2        User?           @relation("Loser2", fields: [loser2Id], references: [id])
+  challenge     Challenge?      @relation(fields: [challengeId], references: [id])
+  ratingHistory RatingHistory[]
+
+  createdAt     DateTime  @default(now())
+  confirmedAt   DateTime?
+  autoConfirmAt DateTime // Auto-confirm 48 hours after creation
+
+  @@index([winner1Id])
+  @@index([loser1Id])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum MatchType {
+  SINGLES
+  DOUBLES
+}
+
+enum MatchStatus {
+  PENDING
+  CONFIRMED
+  DISPUTED
+  REJECTED
+}
+
+model RatingHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  rating    Int
+  change    Int
+  matchId   String
+  user      User     @relation(fields: [userId], references: [id])
+  match     Match    @relation(fields: [matchId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

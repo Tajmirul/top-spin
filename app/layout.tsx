@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -31,7 +33,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${dmSerifDisplay.variable} antialiased`}>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
+        <Toaster />
       </body>
     </html>
   );

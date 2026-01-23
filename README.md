@@ -54,11 +54,27 @@ Create a `.env` file in the root directory:
 cp .env.example .env
 ```
 
-Update `.env` with your database URL:
+Update `.env` with your database URL and other required variables:
 
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/tt_ranker"
+
+# NextAuth.js
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-generate-with-openssl"
+
+# Cron Job Security (required for production)
+CRON_SECRET="your-cron-secret-key"
+```
+
+**Generate secrets:**
+```bash
+# Generate NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# Generate CRON_SECRET
+openssl rand -base64 32
 ```
 
 ### 4. Set up the database
@@ -184,17 +200,62 @@ The application can be deployed to:
 
 ### Deployment Checklist
 
-1. Set up environment variables in your hosting platform
+1. Set up environment variables in your hosting platform:
+   - `DATABASE_URL`: PostgreSQL connection string
+   - `NEXTAUTH_URL`: Your production URL
+   - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
 2. Connect to a production PostgreSQL database
 3. Run `npx prisma db push` or migrations
-4. Ensure `DATABASE_URL` is set correctly
+4. The cron job in `vercel.json` will automatically run day
 
 ### Vercel Deployment
 
 1. Push code to GitHub
 2. Import project in [Vercel](https://vercel.com)
-3. Add environment variable: `DATABASE_URL`
+3. Add environment variables:
+   - `DATABASE_URL`
+   - `NEXTAUTH_URL`
+   - `NEXTAUTH_SECRET`
+   - `CRON_SECRET`
 4. Deploy
+
+**Note:** The cron job is configured in `vercel.json` to run every hour and automatically confirm matches after 48 hours.
+
+## ⏰ Auto-Confirmation System
+
+Matches are automatically confirmed after 48 hours if opponents don't respond. We use a **hybrid approach** for maximum reliability and speed:
+
+### Two-Tier Auto-Confirmation
+
+1. **Instant Check (On Page Load)**
+   - When users visit the dashboard, expired matches are checked and confirmed immediately
+   - Provides instant feedback without waiting for cron
+   - Uses the shared `autoConfirmExpiredMatches()` function
+
+2. **Background Cron Job (Every Hour)**
+   - Vercel Cron Job runs hourly at `:00` (configured in `vercel.json`)
+   - Catches matches even when no one visits the dashboard
+   - Ensures all matches are eventually confirmed
+
+### How It Works
+
+- When a match is submitted → `autoConfirmAt` timestamp set to 48 hours later
+- **First trigger**: User visits dashboard → checks and confirms expired matches
+- **Backup trigger**: Cron job runs hourly → catches any missed matches
+- Auto-confirmed matches update ratings just like manual confirmations
+
+### Security
+
+The cron endpoint requires `CRON_SECRET` authorization to prevent unauthorized access.
+
+### Testing Locally
+
+```bash
+# Test the cron endpoint
+curl http://localhost:3000/api/cron/auto-confirm
+
+# Or just visit the dashboard - it will auto-confirm expired matches
+```
 
 ## 🎯 Next Steps (If Validated)
 

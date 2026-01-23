@@ -89,22 +89,12 @@ export function LandingPage() {
 
           {/* CTA Button */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {process.env.NODE_ENV === "development" && (
-              <Button
-                size="lg"
-                onClick={() => signIn("google")}
-                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
-              >
-                Sign in with Google
-              </Button>
-            )}
             <Button
               size="lg"
-              onClick={() => setIsModalOpen(true)}
-              variant="outline"
-              className="text-lg px-8 py-6 "
+              onClick={() => signIn("google")}
+              className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
             >
-              Join Waitlist
+              Sign in with Google
             </Button>
           </div>
         </div>
@@ -209,24 +199,6 @@ export function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Final CTA */}
-        <div className="mt-20 text-center">
-          <p className="text-zinc-400 mb-1">
-            Help us validate this idea. If you&apos;re interested, join our
-            waitlist and we&apos;ll notify you when it&apos;s ready!
-          </p>
-          <p className="text-primary font-semibold mb-6">
-            We&apos;ll build the app if we get 10 interested people.
-          </p>
-          <Button
-            size="lg"
-            onClick={() => setIsModalOpen(true)}
-            className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
-          >
-            Count Me In! 🏓
-          </Button>
         </div>
       </div>
     </div>

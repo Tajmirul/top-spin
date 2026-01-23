@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { DM_Serif_Display } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleAnalytics } from "@next/third-parties/google"; // Fixes TS2307 error
 import "./globals.css";
+import Clarity from "@/components/tracking/Clarity";
 
 const dmSerifDisplay = DM_Serif_Display({
   variable: "--font-dm-serif",
@@ -35,6 +37,8 @@ export default function RootLayout({
       <body className={`${dmSerifDisplay.variable} antialiased`}>
         <SessionProvider>{children}</SessionProvider>
         <Toaster />
+        <GoogleAnalytics gaId="G-24K8NK0X65" />
+        <Clarity />
       </body>
     </html>
   );

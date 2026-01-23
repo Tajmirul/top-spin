@@ -89,13 +89,15 @@ export function LandingPage() {
 
           {/* CTA Button */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              size="lg"
-              onClick={() => signIn("google")}
-              className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
-            >
-              Sign in with Google
-            </Button>
+            {process.env.NODE_ENV === "development" && (
+              <Button
+                size="lg"
+                onClick={() => signIn("google")}
+                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary/50"
+              >
+                Sign in with Google
+              </Button>
+            )}
             <Button
               size="lg"
               onClick={() => setIsModalOpen(true)}

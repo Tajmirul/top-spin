@@ -13,6 +13,7 @@ const dmSerifDisplay = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://top-spin.vercel.app"),
   title: "TopSpin - Office Table Tennis Ranking",
   description:
     "Track your office table tennis matches and climb the rankings with TopSpin. Join the waitlist now!",
@@ -35,10 +36,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${dmSerifDisplay.variable} antialiased`}>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {children}
+          <Clarity />
+        </SessionProvider>
         <Toaster />
         <GoogleAnalytics gaId="G-24K8NK0X65" />
-        <Clarity />
       </body>
     </html>
   );

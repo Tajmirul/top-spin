@@ -29,12 +29,12 @@ export default function HowItWorksPage() {
           </h2>
           
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">What is ELO?</h3>
-            <p className="text-zinc-300 mb-4">
+            <h3 className="text-xl font-semibold text-white">What is ELO?</h3>
+            <p className="text-zinc-300">
               We use the <strong className="text-primary">ELO rating system</strong> - the same system used in chess - to calculate fair and accurate player rankings. Your rating changes after each match based on the result and your opponent&apos;s strength.
             </p>
-            <div className="bg-zinc-950 border border-zinc-800 p-4 mb-4">
-              <div className="font-mono text-sm text-zinc-300 mb-3">
+            <div className="bg-zinc-950 border border-zinc-800 p-4">
+              <div className="font-mono text-sm text-zinc-300">
                 New Rating = Old Rating + K × (Actual - Expected)
               </div>
               <div className="text-xs space-y-1 text-zinc-400 border-t border-zinc-800 pt-3">
@@ -49,8 +49,8 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">Starting Rating</h3>
-            <div className="flex items-baseline gap-2 mb-4">
+            <h3 className="text-xl font-semibold text-white">Starting Rating</h3>
+            <div className="flex items-baseline gap-2">
               <span className="text-5xl font-bold text-primary">1500</span>
               <span className="text-zinc-400">points</span>
             </div>
@@ -60,7 +60,7 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">How Ratings Change</h3>
+            <h3 className="text-xl font-semibold text-white">How Ratings Change</h3>
             <ul className="space-y-3 text-zinc-300">
               <li className="flex gap-3">
                 <span className="text-primary text-lg">✓</span>
@@ -82,7 +82,29 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">Singles vs Doubles</h3>
+            <h3 className="text-xl font-semibold text-white">Match Series (Multiple Games)</h3>
+            <p className="text-zinc-300">
+              When you play a series of matches (e.g., best of 7), the system calculates rating changes based on <strong className="text-primary">who won more matches overall</strong>.
+            </p>
+            <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+              <div className="text-sm text-zinc-400 mb-2">Example:</div>
+              <div className="text-zinc-300 text-sm">
+                You play a series and win <strong className="text-primary">5 matches</strong>, lose <strong className="text-red-400">2 matches</strong>
+              </div>
+              <div className="text-xs text-zinc-500 mt-2">
+                → You won more (5 &gt; 2), so you&apos;re the overall winner
+              </div>
+              <div className="text-xs text-zinc-500">
+                → Your rating increases ✓ (green), opponent&apos;s decreases (red)
+              </div>
+            </div>
+            <p className="text-sm text-zinc-400">
+              The system calculates the net effect of all matches in the series. Even if you lost some individual games, winning the majority means your rating goes up overall.
+            </p>
+          </Card>
+
+          <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
+            <h3 className="text-xl font-semibold text-white">Singles vs Doubles</h3>
             <div className="space-y-4 text-zinc-300">
               <div>
                 <div className="text-primary font-semibold mb-2">Singles (1v1):</div>
@@ -96,8 +118,8 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6">
-            <h3 className="text-xl font-semibold text-white mb-4">Win Probability</h3>
-            <p className="text-zinc-300 mb-4">
+            <h3 className="text-xl font-semibold text-white">Win Probability</h3>
+            <p className="text-zinc-300">
               Before every match, we calculate your probability of winning based on rating differences:
             </p>
             <div className="space-y-2 text-sm">
@@ -163,8 +185,8 @@ export default function HowItWorksPage() {
           </h2>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">1. Challenge Opponents</h3>
-            <p className="text-zinc-300 mb-3">
+            <h3 className="text-xl font-semibold text-white">1. Challenge Opponents</h3>
+            <p className="text-zinc-300">
               Click the <strong className="text-primary">&quot;Challenge&quot;</strong> button to start a match. Choose:
             </p>
             <ul className="space-y-2 text-zinc-300 ml-4">
@@ -174,15 +196,15 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">2. Accept Challenge</h3>
+            <h3 className="text-xl font-semibold text-white">2. Accept Challenge</h3>
             <p className="text-zinc-300">
               Challenged players receive a notification. They can <strong className="text-green-400">accept</strong> or <strong className="text-red-400">decline</strong> the challenge.
             </p>
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">3. Play & Log Result</h3>
-            <p className="text-zinc-300 mb-3">
+            <h3 className="text-xl font-semibold text-white">3. Play & Log Result</h3>
+            <p className="text-zinc-300">
               After playing, the winner logs the match result with the final score.
             </p>
             <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-400">
@@ -191,8 +213,8 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">4. Confirmation System</h3>
-            <p className="text-zinc-300 mb-4">
+            <h3 className="text-xl font-semibold text-white">4. Confirmation System</h3>
+            <p className="text-zinc-300">
               To ensure fairness, all matches require confirmation:
             </p>
             <div className="space-y-3">
@@ -224,7 +246,7 @@ export default function HowItWorksPage() {
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6">
-            <h3 className="text-xl font-semibold text-white mb-4">5. Ratings Update</h3>
+            <h3 className="text-xl font-semibold text-white">5. Ratings Update</h3>
             <p className="text-zinc-300">
               Once confirmed, your rating updates instantly based on the ELO calculation. You can see your new rating and rating change immediately on your profile.
             </p>
@@ -238,21 +260,21 @@ export default function HowItWorksPage() {
           </h2>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-4">
-            <h3 className="text-xl font-semibold text-white mb-4">All-Time Rankings</h3>
+            <h3 className="text-xl font-semibold text-white">All-Time Rankings</h3>
             <p className="text-zinc-300">
               Your career stats and lifetime rating. These rankings show who are the true legends of TopSpin based on all matches played since joining.
             </p>
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6 mb-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Last 30 Days</h3>
+            <h3 className="text-xl font-semibold text-white">Last 30 Days</h3>
             <p className="text-zinc-300">
               Rankings based on recent performance. See who&apos;s been dominating lately and who&apos;s improving the fastest.
             </p>
           </Card>
 
           <Card className="bg-zinc-900 border-zinc-800 p-6">
-            <h3 className="text-xl font-semibold text-white mb-4">Win Streaks</h3>
+            <h3 className="text-xl font-semibold text-white">Win Streaks</h3>
             <p className="text-zinc-300">
               Track current winning streaks and longest streaks. Can you achieve a 10-game win streak?
             </p>
@@ -294,10 +316,10 @@ export default function HowItWorksPage() {
         {/* Questions */}
         <section className="mb-12">
           <Card className="bg-zinc-900 border border-primary/50 p-6">
-            <h3 className="text-xl font-semibold text-white mb-3">
+            <h3 className="text-xl font-semibold text-white">
               Still have questions?
             </h3>
-            <p className="text-zinc-300 mb-4">
+            <p className="text-zinc-300">
               If you need help or have feedback about the ranking system, reach out to the admin or suggest improvements in the Strativ Slack.
             </p>
             <Link href="/dashboard">

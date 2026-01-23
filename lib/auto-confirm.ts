@@ -43,14 +43,14 @@ export async function autoConfirmExpiredMatches() {
   for (const match of matchesToConfirm) {
     try {
       // Calculate ELO changes
-      const eloResult = calculateELO(
-        match.winner1.rating,
-        match.loser1.rating,
-        match.winner2?.rating,
-        match.loser2?.rating,
-        match.winnerScore,
-        match.loserScore,
-      );
+      const eloResult = calculateELO({
+        winner1Rating: match.winner1.rating,
+        loser1Rating: match.loser1.rating,
+        winner2Rating: match.winner2?.rating,
+        loser2Rating: match.loser2?.rating,
+        matchesWon: match.winnerScore,
+        matchesLost: match.loserScore,
+      });
 
       // Update match and ratings in a transaction
       await prisma.$transaction(async (tx) => {

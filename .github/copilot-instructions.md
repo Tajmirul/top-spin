@@ -360,13 +360,21 @@ Understanding how rating differences translate to win probabilities:
 - Updates in real-time as players are selected
 
 ### Important Consistency
-**The same ELO formula is used in two places:**
+**The same ELO formula is used in three places:**
 1. `lib/elo.ts` - Server-side match result calculations
-2. `components/challenge-modal.tsx` - Client-side preview before match
+2. `components/challenge-modal.tsx` - Client-side preview before sending challenge
+3. `components/submit-result-modal.tsx` - Client-side preview when submitting results
 
-Both use: `1 / (1 + Math.pow(10, (opponentRating - yourRating) / 400))`
+All use: `1 / (1 + Math.pow(10, (opponentRating - yourRating) / 400))`
 
 This ensures the win probability shown to users matches exactly what will be used for rating calculations after the match.
+
+**Critical: When calling `calculateELO()`:**
+- Always determine the **overall winner** first (who won more matches)
+- Pass the overall winner's ratings as `winner1/winner2` parameters
+- Pass the overall loser's ratings as `loser1/loser2` parameters
+- Pass `matchesWon` as the number won by the winner, `matchesLost` as the number won by the loser
+- Example: If you won 5 and lost 2 overall, YOU are the winner - your ratings go in winner slots
 
 ### Design Decisions
 1. **No rating decay**: Ratings persist indefinitely (career stats)

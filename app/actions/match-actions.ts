@@ -52,19 +52,30 @@ export async function submitMatchResult(params: SubmitMatchResultParams) {
 
     // Determine winner and loser based on who won more matches
     const didUserWin = matchesWon > matchesLost;
-    let winner1Id: string, winner2Id: string | undefined, loser1Id: string, loser2Id: string | undefined;
+    let winner1Id: string,
+      winner2Id: string | undefined,
+      loser1Id: string,
+      loser2Id: string | undefined;
 
     if (matchType === MatchType.SINGLES) {
       if (!player1Id || !player2Id) {
         return { success: false, error: "Singles match requires both players" };
       }
-      
+
       winner1Id = didUserWin ? player1Id : player2Id;
       loser1Id = didUserWin ? player2Id : player1Id;
     } else {
       // Doubles
-      if (!team1Player1Id || !team1Player2Id || !team2Player1Id || !team2Player2Id) {
-        return { success: false, error: "Doubles match requires all 4 players" };
+      if (
+        !team1Player1Id ||
+        !team1Player2Id ||
+        !team2Player1Id ||
+        !team2Player2Id
+      ) {
+        return {
+          success: false,
+          error: "Doubles match requires all 4 players",
+        };
       }
 
       winner1Id = didUserWin ? team1Player1Id : team2Player1Id;
@@ -76,7 +87,10 @@ export async function submitMatchResult(params: SubmitMatchResultParams) {
     // Ensure the logged-in user is part of the match
     const userIds = [winner1Id, winner2Id, loser1Id, loser2Id].filter(Boolean);
     if (!userIds.includes(session.user.id)) {
-      return { success: false, error: "You must be a participant in the match" };
+      return {
+        success: false,
+        error: "You must be a participant in the match",
+      };
     }
 
     // Create match with auto-confirm 48 hours from now
@@ -258,15 +272,14 @@ export async function confirmMatch(matchId: string) {
       return { success: false, error: "You are not part of this match" };
     }
 
-    // Calculate ELO changes
-    const eloResult = calculateELO(
-      match.winner1.rating,
-      match.loser1.rating,
-      match.winner2?.rating,
-      match.loser2?.rating,
-      match.winnerScore,
-      match.loserScore
-    );
+    const eloResult = calculateELO({
+      winner1Rating: match.winner1.rating,
+      loser1Rating: match.loser1.rating,
+      winner2Rating: match.winner2?.rating,
+      loser2Rating: match.loser2?.rating,
+      matchesWon: match.winnerScore,
+      matchesLost: match.loserScore,
+    });
 
     // Update match status and rating changes
     await prisma.$transaction(async (tx) => {
@@ -296,7 +309,11 @@ export async function confirmMatch(matchId: string) {
         data: { rating: eloResult.loser1NewRating },
       });
 
-      if (match.matchType === MatchType.DOUBLES && match.winner2Id && match.loser2Id) {
+      if (
+        match.matchType === MatchType.DOUBLES &&
+        match.winner2Id &&
+        match.loser2Id
+      ) {
         if ("winner2NewRating" in eloResult && "loser2NewRating" in eloResult) {
           await tx.user.update({
             where: { id: match.winner2Id },
@@ -329,7 +346,11 @@ export async function confirmMatch(matchId: string) {
         },
       });
 
-      if (match.matchType === MatchType.DOUBLES && match.winner2Id && match.loser2Id) {
+      if (
+        match.matchType === MatchType.DOUBLES &&
+        match.winner2Id &&
+        match.loser2Id
+      ) {
         if ("winner2NewRating" in eloResult && "loser2NewRating" in eloResult) {
           await tx.ratingHistory.create({
             data: {

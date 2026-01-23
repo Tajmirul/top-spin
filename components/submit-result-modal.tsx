@@ -191,6 +191,9 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
     let opponentTeamRating: number;
     let eloChanges: ELOResult | null = null;
 
+    // Determine overall winner (who won more matches)
+    const youWonOverall = won > lost;
+
     if (matchType === MatchType.SINGLES) {
       yourTeamRating = user.rating;
       const opponent = getPlayerById(selectedOpponents[0]);
@@ -198,14 +201,27 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
       opponentTeamRating = opponent.rating;
 
       if (won > 0 || lost > 0) {
-        eloChanges = calculateELO(
-          user.rating,
-          opponent.rating,
-          undefined,
-          undefined,
-          won,
-          lost,
-        );
+        // Pass overall winner as winner1, overall loser as loser1
+        if (youWonOverall) {
+          eloChanges = calculateELO({
+            winner1Rating: user.rating,
+            winner2Rating: undefined,
+            loser1Rating: opponent.rating,
+            loser2Rating: undefined,
+            matchesWon: won,
+            matchesLost: lost,
+          });
+        } else {
+          // Opponent won overall, so they're the winner
+          eloChanges = calculateELO({
+            winner1Rating: opponent.rating,
+            winner2Rating: undefined,
+            loser1Rating: user.rating,
+            loser2Rating: undefined,
+            matchesWon: lost,
+            matchesLost: won,
+          });
+        }
       }
     } else {
       // Doubles
@@ -221,14 +237,27 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
       opponentTeamRating = (opponent1.rating + opponent2.rating) / 2;
 
       if (won > 0 || lost > 0) {
-        eloChanges = calculateELO(
-          user.rating,
-          partner.rating,
-          opponent1.rating,
-          opponent2.rating,
-          won,
-          lost,
-        );
+        // Pass overall winner team as winner1/winner2, overall loser team as loser1/loser2
+        if (youWonOverall) {
+          eloChanges = calculateELO({
+            winner1Rating: user.rating,
+            winner2Rating: partner.rating,
+            loser1Rating: opponent1.rating,
+            loser2Rating: opponent2.rating,
+            matchesWon: won,
+            matchesLost: lost,
+          });
+        } else {
+          // Opponent team won overall, so they're the winners
+          eloChanges = calculateELO({
+            winner1Rating: opponent1.rating,
+            winner2Rating: opponent2.rating,
+            loser1Rating: user.rating,
+            loser2Rating: partner.rating,
+            matchesWon: lost,
+            matchesLost: won,
+          });
+        }
       }
     }
 
@@ -241,6 +270,7 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
       opponentTeamRating: Math.round(opponentTeamRating),
       winProbability: Math.round(winProbability * 100),
       eloChanges,
+      youWonOverall, // Include this so display logic knows who won
     };
   };
 
@@ -430,25 +460,34 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                           You: {user?.rating} →{" "}
                           <span
                             className={`font-semibold ${
-                              stats.eloChanges.winner1NewRating > user!.rating
+                              stats.youWonOverall
                                 ? "text-primary"
                                 : "text-red-400"
                             }`}
                           >
-                            {stats.eloChanges.winner1NewRating}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.winner1NewRating
+                              : stats.eloChanges.loser1NewRating}
                           </span>
                           <span
                             className={`ml-1 ${
-                              stats.eloChanges.winner1NewRating > user!.rating
+                              stats.youWonOverall
                                 ? "text-primary"
                                 : "text-red-400"
                             }`}
                           >
                             (
-                            {stats.eloChanges.winner1NewRating > user!.rating
-                              ? "+"
-                              : ""}
-                            {stats.eloChanges.winner1NewRating - user!.rating})
+                            {stats.youWonOverall
+                              ? stats.eloChanges.winner1Change > 0
+                                ? "+"
+                                : ""
+                              : stats.eloChanges.loser1Change > 0
+                                ? "+"
+                                : ""}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.winner1Change
+                              : stats.eloChanges.loser1Change}
+                            )
                           </span>
                         </div>
                         <div className="text-zinc-300">
@@ -456,29 +495,33 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                           {getPlayerById(selectedOpponents[0])?.rating} →{" "}
                           <span
                             className={`font-semibold ${
-                              stats.eloChanges.loser1NewRating >
-                              getPlayerById(selectedOpponents[0])!.rating
-                                ? "text-primary"
-                                : "text-red-400"
+                              stats.youWonOverall
+                                ? "text-red-400"
+                                : "text-primary"
                             }`}
                           >
-                            {stats.eloChanges.loser1NewRating}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.loser1NewRating
+                              : stats.eloChanges.winner1NewRating}
                           </span>
                           <span
                             className={`ml-1 ${
-                              stats.eloChanges.loser1NewRating >
-                              getPlayerById(selectedOpponents[0])!.rating
-                                ? "text-primary"
-                                : "text-red-400"
+                              stats.youWonOverall
+                                ? "text-red-400"
+                                : "text-primary"
                             }`}
                           >
                             (
-                            {stats.eloChanges.loser1NewRating >
-                            getPlayerById(selectedOpponents[0])!.rating
-                              ? "+"
-                              : ""}
-                            {stats.eloChanges.loser1NewRating -
-                              getPlayerById(selectedOpponents[0])!.rating}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.loser1Change > 0
+                                ? "+"
+                                : ""
+                              : stats.eloChanges.winner1Change > 0
+                                ? "+"
+                                : ""}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.loser1Change
+                              : stats.eloChanges.winner1Change}
                             )
                           </span>
                         </div>
@@ -489,26 +532,42 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                           Your Team: {Math.round(stats.yourTeamRating)} →{" "}
                           <span
                             className={`font-semibold ${
-                              stats.eloChanges.winner1Change > 0
+                              stats.youWonOverall
                                 ? "text-primary"
                                 : "text-red-400"
                             }`}
                           >
-                            {Math.round(
-                              (stats.eloChanges.winner1NewRating +
-                                (stats.eloChanges.winner2NewRating || 0)) /
-                                2,
-                            )}
+                            {stats.youWonOverall
+                              ? Math.round(
+                                  (stats.eloChanges.winner1NewRating +
+                                    (stats.eloChanges.winner2NewRating || 0)) /
+                                    2,
+                                )
+                              : Math.round(
+                                  (stats.eloChanges.loser1NewRating +
+                                    (stats.eloChanges.loser2NewRating || 0)) /
+                                    2,
+                                )}
                           </span>
                           <span
                             className={`ml-1 text-xs ${
-                              stats.eloChanges.winner1Change > 0
+                              stats.youWonOverall
                                 ? "text-primary"
                                 : "text-red-400"
                             }`}
                           >
-                            ({stats.eloChanges.winner1Change > 0 ? "+" : ""}
-                            {stats.eloChanges.winner1Change})
+                            (
+                            {stats.youWonOverall
+                              ? stats.eloChanges.winner1Change > 0
+                                ? "+"
+                                : ""
+                              : stats.eloChanges.loser1Change > 0
+                                ? "+"
+                                : ""}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.winner1Change
+                              : stats.eloChanges.loser1Change}
+                            )
                           </span>
                         </div>
                         <div className="text-zinc-300">
@@ -516,26 +575,42 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                           →{" "}
                           <span
                             className={`font-semibold ${
-                              stats.eloChanges.loser1Change > 0
-                                ? "text-primary"
-                                : "text-red-400"
+                              stats.youWonOverall
+                                ? "text-red-400"
+                                : "text-primary"
                             }`}
                           >
-                            {Math.round(
-                              (stats.eloChanges.loser1NewRating +
-                                (stats.eloChanges.loser2NewRating || 0)) /
-                                2,
-                            )}
+                            {stats.youWonOverall
+                              ? Math.round(
+                                  (stats.eloChanges.loser1NewRating +
+                                    (stats.eloChanges.loser2NewRating || 0)) /
+                                    2,
+                                )
+                              : Math.round(
+                                  (stats.eloChanges.winner1NewRating +
+                                    (stats.eloChanges.winner2NewRating || 0)) /
+                                    2,
+                                )}
                           </span>
                           <span
                             className={`ml-1 text-xs ${
-                              stats.eloChanges.loser1Change > 0
-                                ? "text-primary"
-                                : "text-red-400"
+                              stats.youWonOverall
+                                ? "text-red-400"
+                                : "text-primary"
                             }`}
                           >
-                            ({stats.eloChanges.loser1Change > 0 ? "+" : ""}
-                            {stats.eloChanges.loser1Change})
+                            (
+                            {stats.youWonOverall
+                              ? stats.eloChanges.loser1Change > 0
+                                ? "+"
+                                : ""
+                              : stats.eloChanges.winner1Change > 0
+                                ? "+"
+                                : ""}
+                            {stats.youWonOverall
+                              ? stats.eloChanges.loser1Change
+                              : stats.eloChanges.winner1Change}
+                            )
                           </span>
                         </div>
                       </>

@@ -24,27 +24,33 @@ export interface ELOResult {
   loser2Change?: number;
 }
 
+interface ELOCalculationParams {
+  winner1Rating: number;
+  loser1Rating: number;
+  winner2Rating?: number;
+  loser2Rating?: number;
+  matchesWon?: number;
+  matchesLost?: number;
+  kFactor?: number;
+}
+
 /**
  * Calculate ELO for both Singles (1v1) and Doubles (2v2) match series
  * For Singles: Only provide winner1Rating and loser1Rating
  * For Doubles: Provide all four ratings (winner1, winner2, loser1, loser2)
- * @param winner1Rating - First winner's (or singles winner's) current rating
- * @param loser1Rating - First loser's (or singles loser's) current rating
- * @param winner2Rating - Second winner's current rating (Doubles only)
- * @param loser2Rating - Second loser's current rating (Doubles only)
- * @param matchesWon - Number of matches won by winning side
- * @param matchesLost - Number of matches lost by winning side (won by losing side)
- * @param kFactor - K-factor for ELO calculation (default 32)
+ * Supports multiple matches won/lost in a series
+ * K-Factor can be customized, defaults to 32
+ * Returns new ratings and rating changes for each player
  */
-export function calculateELO(
-  winner1Rating: number,
-  loser1Rating: number,
-  winner2Rating?: number,
-  loser2Rating?: number,
-  matchesWon: number = 1,
-  matchesLost: number = 0,
-  kFactor: number = 32,
-): ELOResult {
+export function calculateELO({
+  winner1Rating,
+  loser1Rating,
+  winner2Rating,
+  loser2Rating,
+  matchesWon = 1,
+  matchesLost = 0,
+  kFactor = Number(process.env.K_FACTOR || "32"),
+}: ELOCalculationParams): ELOResult {
   const isDoubles = winner2Rating !== undefined && loser2Rating !== undefined;
 
   if (isDoubles) {

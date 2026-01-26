@@ -66,6 +66,11 @@ NEXTAUTH_SECRET="your-secret-key-generate-with-openssl"
 
 # Cron Job Security (required for production)
 CRON_SECRET="your-cron-secret-key"
+
+# Email Service (Gmail SMTP)
+GMAIL_USER="your-email@gmail.com"
+GMAIL_APP_PASSWORD="your-16-character-app-password"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 **Generate secrets:**
@@ -110,6 +115,32 @@ The landing page highlights four main features:
 2. **Live Rankings**: Real-time rankings and monthly leaderboards  
 3. **Win Streaks**: Track winning streaks and head-to-head stats
 4. **Auto-Confirm**: Matches auto-confirm after 24-48 hours
+
+## 📧 Email Notifications
+
+When a match result is submitted, all participants (except the submitter) receive an email notification:
+
+- **Match Details**: Shows match type, players, and score
+- **Action Required**: Reminds users to confirm or dispute within 48 hours
+- **Direct Link**: Includes a link to the dashboard to review the match
+- **Automatic Confirmation**: Explains the auto-confirm behavior
+
+### Email Configuration (Gmail SMTP)
+
+The application uses Gmail SMTP with Nodemailer for sending emails:
+
+1. **Enable 2-Factor Authentication** on your Google account
+2. **Generate an App Password**:
+   - Go to [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+   - Select "Mail" and your device
+   - Copy the 16-character password
+3. **Add to your `.env` file**:
+   ```env
+   GMAIL_USER="your-email@gmail.com"
+   GMAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
+   ```
+
+**Note:** Emails will be sent from your Gmail address. Gmail has a daily sending limit of 500 emails for free accounts.
 
 ## 🔒 Email Validation
 
@@ -204,9 +235,13 @@ The application can be deployed to:
    - `DATABASE_URL`: PostgreSQL connection string
    - `NEXTAUTH_URL`: Your production URL
    - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
+   - `CRON_SECRET`: Generate with `openssl rand -base64 32`
+   - `GMAIL_USER`: Your Gmail address
+   - `GMAIL_APP_PASSWORD`: Your Gmail app password
+   - `NEXT_PUBLIC_APP_URL`: Your production URL (for email links)
 2. Connect to a production PostgreSQL database
 3. Run `npx prisma db push` or migrations
-4. The cron job in `vercel.json` will automatically run day
+4. The cron job in `vercel.json` will automatically run daily
 
 ### Vercel Deployment
 
@@ -217,6 +252,9 @@ The application can be deployed to:
    - `NEXTAUTH_URL`
    - `NEXTAUTH_SECRET`
    - `CRON_SECRET`
+   - `GMAIL_USER`
+   - `GMAIL_APP_PASSWORD`
+   - `NEXT_PUBLIC_APP_URL`
 4. Deploy
 
 **Note:** The cron job is configured in `vercel.json` to run every hour and automatically confirm matches after 48 hours.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -56,13 +56,7 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
 
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchPlayers();
-    }
-  }, [isOpen]);
-
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     try {
       const response = await fetch("/api/players");
       const data = await response.json();
@@ -70,7 +64,13 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
     } catch (error) {
       console.error("Failed to fetch players:", error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPlayers();
+    }
+  }, [isOpen, fetchPlayers]);
 
   const filteredPlayers = players.filter(
     (player) =>

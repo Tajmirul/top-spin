@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { MatchType, MatchStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { calculateELO } from "@/lib/elo";
+import { sendMatchSubmissionNotification } from "@/lib/email";
 
 export interface SubmitMatchResultParams {
   matchType: MatchType;
@@ -147,8 +148,54 @@ export async function submitMatchResult(params: SubmitMatchResultParams) {
             rating: true,
           },
         },
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
+
+    // Send email notifications to all participants (except submitter)
+    try {
+      const recipientEmails: string[] = [];
+
+      // Collect all participant emails
+      if (match.winner1.email && match.winner1.id !== session.user.id) {
+        recipientEmails.push(match.winner1.email);
+      }
+      if (match.winner2?.email && match.winner2.id !== session.user.id) {
+        recipientEmails.push(match.winner2.email);
+      }
+      if (match.loser1.email && match.loser1.id !== session.user.id) {
+        recipientEmails.push(match.loser1.email);
+      }
+      if (match.loser2?.email && match.loser2.id !== session.user.id) {
+        recipientEmails.push(match.loser2.email);
+      }
+
+      if (recipientEmails.length > 0) {
+        await sendMatchSubmissionNotification(
+          {
+            matchType: match.matchType,
+            submitterName: match.submittedBy?.name || "Someone",
+            submitterEmail: match.submittedBy?.email || "",
+            winner1Name: match.winner1.name || match.winner1.email,
+            winner2Name: match.winner2?.name || match.winner2?.email,
+            loser1Name: match.loser1.name || match.loser1.email,
+            loser2Name: match.loser2?.name || match.loser2?.email,
+            winnerScore: match.winnerScore,
+            loserScore: match.loserScore,
+          },
+          recipientEmails,
+        );
+      }
+    } catch (emailError) {
+      console.error("Failed to send email notifications:", emailError);
+      // Don't fail the match creation if email fails
+    }
 
     // Revalidate relevant paths
     revalidatePath("/dashboard");

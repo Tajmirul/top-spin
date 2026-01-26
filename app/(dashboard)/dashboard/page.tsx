@@ -42,12 +42,15 @@ export default async function DashboardPage() {
   const pendingMatches = await prisma.match.findMany({
     where: {
       status: MatchStatus.PENDING,
-      OR: [
-        { winner1Id: userId },
-        { winner2Id: userId },
-        { loser1Id: userId },
-        { loser2Id: userId },
-      ],
+      OR:
+        session?.user.role === UserRole.ADMIN
+          ? undefined
+          : [
+              { winner1Id: userId },
+              { winner2Id: userId },
+              { loser1Id: userId },
+              { loser2Id: userId },
+            ],
     },
     orderBy: { createdAt: "desc" },
     select: {

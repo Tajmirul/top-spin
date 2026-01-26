@@ -172,9 +172,15 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
       const result = await submitMatchResult(payload);
 
       if (result.success) {
-        toast.success(
-          `Match results submitted (${won} wins, ${lost} losses)! Waiting for opponent confirmation.`,
-        );
+        if (isAdmin) {
+          toast.success(
+            `Match results submitted and confirmed! (${won} wins, ${lost} losses)`,
+          );
+        } else {
+          toast.success(
+            `Match results submitted (${won} wins, ${lost} losses)! Waiting for opponent confirmation.`,
+          );
+        }
         onClose();
         resetForm();
       } else {
@@ -492,19 +498,19 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                 {stats && (
                   <div className="flex items-center gap-4 text-xs">
                     <div className="text-zinc-400">
-                      Your Team:{" "}
+                      {isAdmin && matchType === MatchType.SINGLES ? "Player 1:" : "Your Team:"}{" "}
                       <span className="font-semibold text-primary">
                         {stats.yourTeamRating}
                       </span>
                     </div>
                     <div className="text-zinc-400">
-                      Opponents:{" "}
+                      {isAdmin && matchType === MatchType.SINGLES ? "Player 2:" : "Opponents:"}{" "}
                       <span className="font-semibold text-red-400">
                         {stats.opponentTeamRating}
                       </span>
                     </div>
                     <div className="text-zinc-400">
-                      Win Chance:{" "}
+                      {isAdmin && matchType === MatchType.SINGLES ? "P1" : "Your"} Win Chance:{" "}
                       <span
                         className={`font-semibold ${stats.winProbability >= 50 ? "text-primary" : "text-red-400"}`}
                       >
@@ -515,13 +521,20 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                 )}
               </div>
 
-              {matchType === MatchType.DOUBLES && (
+              {/* Player 1 / Team 1 / Your Team Section */}
+              {(matchType === MatchType.DOUBLES || (isAdmin && matchType === MatchType.SINGLES && adminSelectedPlayers.length >= 1)) && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 w-20">{isAdmin ? "Team 1:" : "Your Team:"}</span>
+                  <span className="text-xs text-zinc-500 w-20">
+                    {isAdmin 
+                      ? matchType === MatchType.SINGLES 
+                        ? "Player 1:" 
+                        : "Team 1:"
+                      : "Your Team:"}
+                  </span>
                   <div className="flex items-center gap-2">
                     {isAdmin ? (
-                      // Admin mode: show first 2 selected players
-                      adminSelectedPlayers.slice(0, 2).map((playerId, index) => {
+                      // Admin mode: show first player (singles) or first 2 players (doubles)
+                      adminSelectedPlayers.slice(0, matchType === MatchType.SINGLES ? 1 : 2).map((playerId, index) => {
                         const player = getPlayerById(playerId);
                         if (!player) return null;
                         return (
@@ -545,7 +558,7 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                         );
                       })
                     ) : (
-                      // Regular user mode
+                      // Regular user mode (doubles only)
                       <>
                         {user?.image ? (
                           <Image
@@ -588,8 +601,17 @@ export function SubmitResultModal({ isOpen, onClose }: SubmitResultModalProps) {
                 </div>
               )}
 
+              {/* Player 2 / Team 2 / Opponents Section */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500 w-20">{isAdmin && matchType === MatchType.DOUBLES ? "Team 2:" : "Opponents:"}</span>
+                <span className="text-xs text-zinc-500 w-20">
+                  {isAdmin 
+                    ? matchType === MatchType.SINGLES 
+                      ? "Player 2:" 
+                      : "Team 2:"
+                    : matchType === MatchType.SINGLES
+                      ? "Opponent:"
+                      : "Opponents:"}
+                </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   {isAdmin ? (
                     // Admin mode: show remaining selected players (opponent in singles, team 2 in doubles)

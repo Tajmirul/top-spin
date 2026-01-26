@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { MatchType, MatchStatus } from "@prisma/client";
+import { MatchType, MatchStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { calculateELO } from "@/lib/elo";
 import { sendMatchSubmissionNotification } from "@/lib/email";
@@ -85,15 +85,212 @@ export async function submitMatchResult(params: SubmitMatchResultParams) {
       loser2Id = didUserWin ? team2Player2Id : team1Player2Id;
     }
 
-    // Ensure the logged-in user is part of the match
+    // Ensure the logged-in user is part of the match (unless admin)
     const userIds = [winner1Id, winner2Id, loser1Id, loser2Id].filter(Boolean);
-    if (!userIds.includes(session.user.id)) {
+    if (
+      session.user.role !== UserRole.ADMIN &&
+      !userIds.includes(session.user.id)
+    ) {
       return {
         success: false,
         error: "You must be a participant in the match",
       };
     }
 
+    const isAdmin = session.user.role === UserRole.ADMIN;
+
+    // Fetch player ratings for ELO calculation (needed for admin auto-confirm)
+    let winner1Rating: number,
+      winner2Rating: number | undefined,
+      loser1Rating: number,
+      loser2Rating: number | undefined;
+
+    if (isAdmin) {
+      const players = await prisma.user.findMany({
+        where: {
+          id: { in: userIds as string[] },
+        },
+        select: { id: true, rating: true },
+      });
+
+      const playerMap = new Map(players.map((p) => [p.id, p.rating]));
+      winner1Rating = playerMap.get(winner1Id)!;
+      loser1Rating = playerMap.get(loser1Id)!;
+      if (winner2Id) winner2Rating = playerMap.get(winner2Id);
+      if (loser2Id) loser2Rating = playerMap.get(loser2Id);
+    }
+
+    // Admin submits = auto-confirm immediately
+    if (isAdmin) {
+      // Calculate ELO changes
+      const eloResult = calculateELO({
+        winner1Rating: winner1Rating!,
+        loser1Rating: loser1Rating!,
+        winner2Rating: winner2Rating,
+        loser2Rating: loser2Rating,
+        matchesWon: Math.max(matchesWon, matchesLost),
+        matchesLost: Math.min(matchesWon, matchesLost),
+      });
+
+      // Create confirmed match with rating changes in a transaction
+      const match = await prisma.$transaction(async (tx) => {
+        // Create match
+        const createdMatch = await tx.match.create({
+          data: {
+            matchType,
+            submittedById: session.user.id,
+            winner1Id,
+            winner2Id: winner2Id || null,
+            loser1Id,
+            loser2Id: loser2Id || null,
+            winnerScore: Math.max(matchesWon, matchesLost),
+            loserScore: Math.min(matchesWon, matchesLost),
+            status: MatchStatus.CONFIRMED,
+            confirmedAt: new Date(),
+            autoConfirmAt: new Date(), // Set to now since it's already confirmed
+            winner1RatingChange: eloResult.winner1Change,
+            winner2RatingChange:
+              "winner2Change" in eloResult ? eloResult.winner2Change : null,
+            loser1RatingChange: eloResult.loser1Change,
+            loser2RatingChange:
+              "loser2Change" in eloResult ? eloResult.loser2Change : null,
+          },
+          include: {
+            winner1: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                rating: true,
+              },
+            },
+            winner2: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                rating: true,
+              },
+            },
+            loser1: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                rating: true,
+              },
+            },
+            loser2: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                rating: true,
+              },
+            },
+            submittedBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+
+        // Update player ratings
+        await tx.user.update({
+          where: { id: winner1Id },
+          data: { rating: eloResult.winner1NewRating },
+        });
+
+        await tx.user.update({
+          where: { id: loser1Id },
+          data: { rating: eloResult.loser1NewRating },
+        });
+
+        if (matchType === MatchType.DOUBLES && winner2Id && loser2Id) {
+          if (
+            "winner2NewRating" in eloResult &&
+            "loser2NewRating" in eloResult &&
+            eloResult.winner2NewRating !== undefined &&
+            eloResult.loser2NewRating !== undefined
+          ) {
+            await tx.user.update({
+              where: { id: winner2Id },
+              data: { rating: eloResult.winner2NewRating },
+            });
+
+            await tx.user.update({
+              where: { id: loser2Id },
+              data: { rating: eloResult.loser2NewRating },
+            });
+          }
+        }
+
+        // Create rating history records
+        await tx.ratingHistory.create({
+          data: {
+            userId: winner1Id,
+            rating: eloResult.winner1NewRating,
+            change: eloResult.winner1Change,
+            matchId: createdMatch.id,
+          },
+        });
+
+        await tx.ratingHistory.create({
+          data: {
+            userId: loser1Id,
+            rating: eloResult.loser1NewRating,
+            change: eloResult.loser1Change,
+            matchId: createdMatch.id,
+          },
+        });
+
+        if (matchType === MatchType.DOUBLES && winner2Id && loser2Id) {
+          if (
+            "winner2NewRating" in eloResult &&
+            "loser2NewRating" in eloResult &&
+            eloResult.winner2NewRating !== undefined &&
+            eloResult.loser2NewRating !== undefined &&
+            eloResult.winner2Change !== undefined &&
+            eloResult.loser2Change !== undefined
+          ) {
+            await tx.ratingHistory.create({
+              data: {
+                userId: winner2Id,
+                rating: eloResult.winner2NewRating,
+                change: eloResult.winner2Change,
+                matchId: createdMatch.id,
+              },
+            });
+
+            await tx.ratingHistory.create({
+              data: {
+                userId: loser2Id,
+                rating: eloResult.loser2NewRating,
+                change: eloResult.loser2Change,
+                matchId: createdMatch.id,
+              },
+            });
+          }
+        }
+
+        return createdMatch;
+      });
+
+      // Revalidate relevant paths
+      revalidatePath("/dashboard");
+      revalidatePath("/players");
+
+      return { success: true, match };
+    }
+
+    // Regular user submission - create pending match
     // Create match with auto-confirm 48 hours from now
     const autoConfirmAt = new Date();
     autoConfirmAt.setHours(autoConfirmAt.getHours() + 48);
@@ -315,7 +512,10 @@ export async function confirmMatch(matchId: string) {
       match.loser2Id,
     ].filter(Boolean);
 
-    if (!userIds.includes(session.user.id)) {
+    if (
+      session.user.role !== UserRole.ADMIN &&
+      !userIds.includes(session.user.id)
+    ) {
       return { success: false, error: "You are not part of this match" };
     }
 

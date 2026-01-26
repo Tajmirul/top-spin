@@ -97,7 +97,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
   };
 
   const isActionAllowed = (match: Match) => {
-    return !isUserSubmitter(match) || user?.role === UserRole.ADMIN;
+    return user && (!isUserSubmitter(match) || user?.role === UserRole.ADMIN);
   };
 
   if (matches.length === 0) {

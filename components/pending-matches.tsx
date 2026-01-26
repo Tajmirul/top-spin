@@ -193,7 +193,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
                 </div>
 
                 {/* Actions - Only show for users who didn't report the result */}
-                {!userIsSubmitter && (
+                {userId && !userIsSubmitter && (
                   <div className="flex gap-2">
                     <Button
                       size="icon-sm"

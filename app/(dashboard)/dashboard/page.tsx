@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { TopRankings } from "@/components/top-rankings";
 import { LatestMatches } from "@/components/latest-matches";
 import { PendingMatches } from "@/components/pending-matches";
-import { MatchStatus } from "@prisma/client";
+import { AdminPanel } from "@/components/admin-panel";
+import { MatchStatus, UserRole } from "@prisma/client";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -66,6 +67,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-4">
+      {/* Admin Panel - Only visible to admins */}
+      {session!.user.role === UserRole.ADMIN && <AdminPanel />}
+
       <PendingMatches matches={pendingMatches} />
 
       <div className="grid gap-4 lg:grid-cols-2">

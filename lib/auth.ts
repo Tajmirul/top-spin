@@ -31,7 +31,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         where: { email: user.email! },
       });
 
-      if (existingUser) {
+      if (
+        existingUser &&
+        (existingUser.name === null || existingUser.image === null)
+      ) {
         // Update existing user with name and image from Google
         const dbUser = await prisma.user.update({
           where: { email: user.email! },

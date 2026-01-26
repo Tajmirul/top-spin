@@ -5,12 +5,17 @@ import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { SubmitResultModal } from "@/components/submit-result-modal";
-import { LogOut } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { UserRole } from "@prisma/client";
 
 export function DashboardNav() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [isSubmitResultModalOpen, setIsSubmitResultModalOpen] = useState(false);
+  
+  const isAdmin = session?.user?.role === UserRole.ADMIN;
 
   return (
     <>
@@ -18,15 +23,34 @@ export function DashboardNav() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Image
-                src={"/logo.png"}
-                alt="TopSpin Logo"
-                width={32}
-                height={32}
-              />
-              <span className="font-serif text-xl font-semibold">TopSpin</span>
-            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <Image
+                  src={"/logo.png"}
+                  alt="TopSpin Logo"
+                  width={32}
+                  height={32}
+                />
+                <span className="font-serif text-xl font-semibold">TopSpin</span>
+              </Link>
+              
+              {/* Admin Navigation */}
+              {isAdmin && (
+                <div className="hidden md:flex items-center gap-2">
+                  <Link
+                    href="/admin/users"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
+                      pathname === "/admin/users"
+                        ? "bg-amber-500/10 text-amber-500"
+                        : "text-zinc-400 hover:text-amber-500 hover:bg-amber-500/5"
+                    }`}
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Link>
+                </div>
+              )}
+            </div>
 
             {/* Right side */}
             <div className="flex items-center gap-4">
@@ -37,14 +61,6 @@ export function DashboardNav() {
               >
                 Submit Result
               </Button>
-
-              {/* <Button
-                size={"sm"}
-                onClick={() => setIsChallengeModalOpen(true)}
-                className="bg-primary text-zinc-950 hover:bg-primary/90"
-              >
-                Challenge
-              </Button> */}
 
               {/* User info */}
               <Link
@@ -61,8 +77,11 @@ export function DashboardNav() {
                   />
                 )}
                 <div className="text-right">
-                  <div className="font-medium text-white">
+                  <div className="flex items-center gap-1.5 font-medium text-white">
                     {session?.user?.name}
+                    {isAdmin && (
+                      <Shield className="h-3.5 w-3.5 text-amber-500" />
+                    )}
                   </div>
                   <div className="text-xs text-zinc-400">
                     Rating: {session?.user?.rating}
@@ -83,11 +102,6 @@ export function DashboardNav() {
           </div>
         </div>
       </nav>
-
-      {/* <ChallengeModal
-        isOpen={isChallengeModalOpen}
-        onClose={() => setIsChallengeModalOpen(false)}
-      /> */}
 
       <SubmitResultModal
         isOpen={isSubmitResultModalOpen}

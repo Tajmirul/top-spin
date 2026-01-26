@@ -21,6 +21,43 @@ export interface SubmitMatchResultParams {
   team2Player2Id?: string;
 }
 
+export async function getLatestMatches(page: number = 0, pageSize: number = 20) {
+  try {
+    const session = await auth();
+
+    if (!session) {
+      return { success: false, error: "Unauthorized", matches: [], hasMore: false };
+    }
+
+    const skip = page * pageSize;
+
+    const [matches, totalCount] = await Promise.all([
+      prisma.match.findMany({
+        take: pageSize,
+        skip,
+        where: { status: MatchStatus.CONFIRMED },
+        orderBy: { confirmedAt: "desc" },
+        include: {
+          winner1: { select: { id: true, name: true, image: true } },
+          winner2: { select: { id: true, name: true, image: true } },
+          loser1: { select: { id: true, name: true, image: true } },
+          loser2: { select: { id: true, name: true, image: true } },
+        },
+      }),
+      prisma.match.count({
+        where: { status: MatchStatus.CONFIRMED },
+      }),
+    ]);
+
+    const hasMore = skip + matches.length < totalCount;
+
+    return { success: true, matches, hasMore, totalCount };
+  } catch (error) {
+    console.error("Failed to fetch latest matches:", error);
+    return { success: false, error: "Failed to fetch matches", matches: [], hasMore: false };
+  }
+}
+
 export async function submitMatchResult(params: SubmitMatchResultParams) {
   try {
     const session = await auth();
@@ -678,5 +715,114 @@ export async function rejectMatch(matchId: string) {
   } catch (error) {
     console.error("Failed to reject match:", error);
     return { success: false, error: "Failed to reject match" };
+  }
+}
+
+export async function revertMatch(matchId: string) {
+  try {
+    const session = await auth();
+
+    if (!session) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Only admins can revert matches
+    if (session.user.role !== UserRole.ADMIN) {
+      return { success: false, error: "Only admins can revert matches" };
+    }
+
+    // Fetch the match with all player data
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        winner1: true,
+        winner2: true,
+        loser1: true,
+        loser2: true,
+      },
+    });
+
+    if (!match) {
+      return { success: false, error: "Match not found" };
+    }
+
+    // Only revert confirmed matches
+    if (match.status !== MatchStatus.CONFIRMED) {
+      return { success: false, error: "Only confirmed matches can be reverted" };
+    }
+
+    // Check that rating changes exist
+    if (
+      match.winner1RatingChange === null ||
+      match.loser1RatingChange === null
+    ) {
+      return { success: false, error: "Match has no rating changes to revert" };
+    }
+
+    // Revert ratings in a transaction
+    await prisma.$transaction(async (tx) => {
+      // Revert winner1 rating
+      await tx.user.update({
+        where: { id: match.winner1Id },
+        data: {
+          rating: match.winner1.rating - match.winner1RatingChange!,
+        },
+      });
+
+      // Revert loser1 rating
+      await tx.user.update({
+        where: { id: match.loser1Id },
+        data: {
+          rating: match.loser1.rating - match.loser1RatingChange!,
+        },
+      });
+
+      // Revert winner2 rating if doubles match
+      if (
+        match.matchType === MatchType.DOUBLES &&
+        match.winner2Id &&
+        match.winner2RatingChange !== null
+      ) {
+        await tx.user.update({
+          where: { id: match.winner2Id },
+          data: {
+            rating: match.winner2!.rating - match.winner2RatingChange,
+          },
+        });
+      }
+
+      // Revert loser2 rating if doubles match
+      if (
+        match.matchType === MatchType.DOUBLES &&
+        match.loser2Id &&
+        match.loser2RatingChange !== null
+      ) {
+        await tx.user.update({
+          where: { id: match.loser2Id },
+          data: {
+            rating: match.loser2!.rating - match.loser2RatingChange,
+          },
+        });
+      }
+
+      // Delete rating history entries
+      await tx.ratingHistory.deleteMany({
+        where: { matchId },
+      });
+
+      // Delete the match
+      await tx.match.delete({
+        where: { id: matchId },
+      });
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/players");
+    revalidatePath("/admin/users");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to revert match:", error);
+    return { success: false, error: "Failed to revert match" };
   }
 }

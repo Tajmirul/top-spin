@@ -1,7 +1,23 @@
-import { Match, MatchType } from "@prisma/client";
+"use client";
+
+import { Match, MatchType, UserRole } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { User } from "next-auth";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { revertMatch } from "@/app/actions/match-actions";
+import { toast } from "sonner";
+import { useUser } from "@/hooks/useUser";
 
 interface MatchCardProps {
   match: Match & {
@@ -12,13 +28,37 @@ interface MatchCardProps {
   };
   variant?: "default" | "user-focused" | "user-history";
   currentUserId?: string;
+  showAdminActions?: boolean;
 }
 
 export function MatchCard({
   match,
   variant = "default",
   currentUserId,
+  showAdminActions = false,
 }: MatchCardProps) {
+  const { user } = useUser();
+  const [isReverting, setIsReverting] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const handleRevert = async () => {
+    setShowConfirmDialog(false);
+    setIsReverting(true);
+    try {
+      const result = await revertMatch(match.id);
+      if (result.success) {
+        toast.success("Match reverted successfully");
+      } else {
+        toast.error(result.error || "Failed to revert match");
+      }
+    } catch (error) {
+      console.error("Failed to revert match:", error);
+      toast.error("Failed to revert match");
+    } finally {
+      setIsReverting(false);
+    }
+  };
+
   const isUserWinner = () => {
     if (!currentUserId) return false;
     return [match.winner1Id, match.winner2Id].includes(currentUserId);
@@ -255,10 +295,51 @@ export function MatchCard({
   };
 
   return (
-    <div className={`p-4 ${getCardClassName()}`}>
-      <div className="flex items-center justify-between">
-        {renderMatchContent()}
+    <>
+      <div className={`p-4 ${getCardClassName()}`}>
+        <div className="flex items-center justify-between gap-4">
+          {renderMatchContent()}
+          
+          {showAdminActions && user?.role === UserRole.ADMIN && match.status === "CONFIRMED" && (
+            <Button
+              size="icon-sm"
+              variant="destructive"
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={isReverting}
+              title="Revert match (admin only)"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-white">Revert Match?</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              This will permanently delete the match and restore all player ratings to their previous values. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+              className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRevert}
+              disabled={isReverting}
+            >
+              {isReverting ? "Reverting..." : "Revert Match"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

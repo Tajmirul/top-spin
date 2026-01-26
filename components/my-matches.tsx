@@ -31,6 +31,7 @@ export function MyMatches({ matches }: MyMatchesProps) {
               match={match}
               variant="user-focused"
               currentUserId={currentUserId}
+              showAdminActions={true}
             />
           ))
         )}

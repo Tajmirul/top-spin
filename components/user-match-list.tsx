@@ -51,6 +51,7 @@ export function UserMatchList({
                 match={match}
                 variant="user-history"
                 currentUserId={userId}
+                showAdminActions={true}
               />
             ))}
 

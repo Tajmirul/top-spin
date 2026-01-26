@@ -105,7 +105,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
   }
 
   return (
-    <Card className="lg:max-w-[calc(50%-0.5rem)]">
+    <Card className="">
       <CardHeader>
         <CardTitle className="font-serif text-xl">
           Pending Confirmations

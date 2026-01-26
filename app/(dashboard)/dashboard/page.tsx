@@ -25,19 +25,6 @@ export default async function DashboardPage() {
     },
   });
 
-  // Fetch 10 latest matches (all users)
-  const latestMatches = await prisma.match.findMany({
-    take: 10,
-    where: { status: MatchStatus.CONFIRMED },
-    orderBy: { confirmedAt: "desc" },
-    include: {
-      winner1: { select: { id: true, name: true, image: true } },
-      winner2: { select: { id: true, name: true, image: true } },
-      loser1: { select: { id: true, name: true, image: true } },
-      loser2: { select: { id: true, name: true, image: true } },
-    },
-  });
-
   // Fetch pending matches that need user's approval
   const pendingMatches = await prisma.match.findMany({
     where: {
@@ -73,14 +60,17 @@ export default async function DashboardPage() {
       {/* Admin Panel - Only visible to admins */}
       {session!.user.role === UserRole.ADMIN && <AdminPanel />}
 
-      <PendingMatches matches={pendingMatches} />
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <TopRankings
-          players={topPlayers}
-          currentUserRank={currentUserRank + 1}
-        />
-        <LatestMatches matches={latestMatches} />
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
+        <div className="xl:col-span-3 space-y-4">
+          <PendingMatches matches={pendingMatches} />
+          <LatestMatches />
+        </div>
+        <div className="xl:col-span-2">
+          <TopRankings
+            players={topPlayers}
+            currentUserRank={currentUserRank + 1}
+          />
+        </div>
       </div>
     </div>
   );

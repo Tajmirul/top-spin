@@ -59,15 +59,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
-        
+
         // Fetch fresh rating from database on every session access
         const user = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { rating: true },
+          select: { rating: true, role: true },
         });
-        
+
         if (user) {
           session.user.rating = user.rating;
+          session.user.role = user.role;
         }
       }
       return session;

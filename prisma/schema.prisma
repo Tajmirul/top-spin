@@ -12,57 +12,56 @@ datasource db {
   provider = "postgresql"
 }
 
-model InterestedUser {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model User {
-  id                 String          @id @default(cuid())
-  email              String          @unique
-  name               String?         // Optional - populated on first sign-in
-  image              String?
-  rating             Int             @default(1500)
-  matchesSubmitted   Match[]         @relation("SubmittedBy")
-  matchesAsWinner1   Match[]         @relation("Winner1")
-  matchesAsWinner2   Match[]         @relation("Winner2")
-  matchesAsLoser1    Match[]         @relation("Loser1")
-  matchesAsLoser2    Match[]         @relation("Loser2")
-  challengesSent     Challenge[]     @relation("Challenger")
-  challengesReceived Challenge[]     @relation("Challenged")
-  challengesAsPartner Challenge[]    @relation("Partner")
-  challengesAsOpponent2 Challenge[]  @relation("Challenged2")
-  ratingHistory      RatingHistory[]
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                    String          @id @default(cuid())
+  email                 String          @unique
+  name                  String? // Optional - populated on first sign-in
+  image                 String?
+  rating                Int             @default(1500)
+  role                  UserRole        @default(USER)
+  matchesSubmitted      Match[]         @relation("SubmittedBy")
+  matchesAsWinner1      Match[]         @relation("Winner1")
+  matchesAsWinner2      Match[]         @relation("Winner2")
+  matchesAsLoser1       Match[]         @relation("Loser1")
+  matchesAsLoser2       Match[]         @relation("Loser2")
+  challengesSent        Challenge[]     @relation("Challenger")
+  challengesReceived    Challenge[]     @relation("Challenged")
+  challengesAsPartner   Challenge[]     @relation("Partner")
+  challengesAsOpponent2 Challenge[]     @relation("Challenged2")
+  ratingHistory         RatingHistory[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 
   @@index([rating])
   @@index([email])
 }
 
 model Challenge {
-  id            String          @id @default(cuid())
-  matchType     MatchType       @default(SINGLES)
-  
+  id        String    @id @default(cuid())
+  matchType MatchType @default(SINGLES)
+
   challengerId  String
-  partnerId     String?         // For doubles - challenger's partner
-  challengedId  String          // First opponent
-  challengedId2 String?         // Second opponent for doubles
-  
-  status        ChallengeStatus @default(PENDING)
-  message       String?
-  
-  challenger    User            @relation("Challenger", fields: [challengerId], references: [id])
-  partner       User?           @relation("Partner", fields: [partnerId], references: [id])
-  challenged    User            @relation("Challenged", fields: [challengedId], references: [id])
-  challenged2   User?           @relation("Challenged2", fields: [challengedId2], references: [id])
-  
-  match         Match?
-  createdAt     DateTime        @default(now())
-  respondedAt   DateTime?
-  expiresAt     DateTime        // Auto-expire after 7 days
+  partnerId     String? // For doubles - challenger's partner
+  challengedId  String // First opponent
+  challengedId2 String? // Second opponent for doubles
+
+  status  ChallengeStatus @default(PENDING)
+  message String?
+
+  challenger  User  @relation("Challenger", fields: [challengerId], references: [id])
+  partner     User? @relation("Partner", fields: [partnerId], references: [id])
+  challenged  User  @relation("Challenged", fields: [challengedId], references: [id])
+  challenged2 User? @relation("Challenged2", fields: [challengedId2], references: [id])
+
+  match       Match?
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+  expiresAt   DateTime // Auto-expire after 7 days
 
   @@index([challengerId])
   @@index([challengedId])
@@ -78,10 +77,10 @@ enum ChallengeStatus {
 }
 
 model Match {
-  id          String    @id @default(cuid())
-  challengeId String?   @unique
-  matchType   MatchType @default(SINGLES)
-  submittedById String?  // User who submitted/reported this match
+  id            String    @id @default(cuid())
+  challengeId   String?   @unique
+  matchType     MatchType @default(SINGLES)
+  submittedById String? // User who submitted/reported this match
 
   // Players (winner2 and loser2 are null for 1v1)
   winner1Id String

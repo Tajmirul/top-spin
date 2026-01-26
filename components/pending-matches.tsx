@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
-import { MatchType } from "@prisma/client";
+import { MatchType, UserRole } from "@prisma/client";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useUser } from "@/hooks/useUser";
@@ -36,10 +36,9 @@ interface PendingMatchesProps {
 export function PendingMatches({ matches }: PendingMatchesProps) {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { user } = useUser();
-  const userId = user?.id;
 
   const isUserSubmitter = (match: Match) => {
-    return match.submittedById === userId;
+    return match.submittedById === user?.id;
   };
 
   const getTeamPlayers = (match: Match, isWinning: boolean) => {
@@ -97,6 +96,10 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
     return `${hours}h`;
   };
 
+  const isActionAllowed = (match: Match) => {
+    return !isUserSubmitter(match) || user?.role === UserRole.ADMIN;
+  };
+
   if (matches.length === 0) {
     return null;
   }
@@ -136,7 +139,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
 
                           <span
                             className={
-                              player.id === userId
+                              player.id === user?.id
                                 ? "font-semibold text-white"
                                 : "text-zinc-400"
                             }
@@ -170,7 +173,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
                           )}
                           <span
                             className={
-                              player.id === userId
+                              player.id === user?.id
                                 ? "font-semibold text-white"
                                 : "text-zinc-400"
                             }
@@ -193,7 +196,7 @@ export function PendingMatches({ matches }: PendingMatchesProps) {
                 </div>
 
                 {/* Actions - Only show for users who didn't report the result */}
-                {userId && !userIsSubmitter && (
+                {isActionAllowed(match) && (
                   <div className="flex gap-2">
                     <Button
                       size="icon-sm"

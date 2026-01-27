@@ -1,20 +1,14 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { UserRole } from "@prisma/client";
-import { AdminUsersTable } from "@/components/admin-users-table";
+import UsersTable from "@/components/admin-users-table";
 
-export default async function AdminUsersPage() {
+export default async function UsersPage() {
   const session = await auth();
 
   // Check if user is authenticated
   if (!session) {
     redirect("/");
-  }
-
-  // Check if user is admin
-  if (session.user.role !== UserRole.ADMIN) {
-    redirect("/dashboard");
   }
 
   // Fetch all users
@@ -61,14 +55,14 @@ export default async function AdminUsersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl text-white">User Management</h1>
+          <h1 className="font-serif text-2xl text-white">Users</h1>
           <p className="text-sm text-zinc-400">
-            Manage all users in the system
+            View all registered users.
           </p>
         </div>
       </div>
 
-      <AdminUsersTable users={usersWithStats} />
+      <UsersTable users={usersWithStats} />
     </div>
   );
 }

@@ -1,43 +1,46 @@
-"use client"
+"use client";
 
-import { Card } from "@/components/ui/card"
-import { Trophy, Medal } from "lucide-react"
-import { useUser } from "@/hooks/useUser"
-import Image from "next/image"
-import Link from "next/link"
-import { getPlayerTier, getTierBadgeClasses } from "@/lib/tiers"
-import { User } from "@prisma/client"
+import { Card } from "@/components/ui/card";
+import { Trophy, Medal } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
+import Image from "next/image";
+import Link from "next/link";
+import { getPlayerTier, getTierBadgeClasses } from "@/lib/tiers";
+import { User } from "@prisma/client";
 
 interface TopRankingsProps {
-  players: User[]
-  currentUserRank: number
+  players: User[];
+  currentUserRank: number;
 }
 
 export function TopRankings({ players, currentUserRank }: TopRankingsProps) {
-  const { user } = useUser()
-  const currentUserId = user?.id
+  const { user } = useUser();
+  const currentUserId = user?.id;
 
-  if (!currentUserId) return null
+  if (!currentUserId) return null;
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />
-    if (rank === 2) return <Medal className="h-5 w-5 text-zinc-400" />
-    if (rank === 3) return <Medal className="h-5 w-5 text-amber-700" />
-    return null
-  }
+    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-5 w-5 text-zinc-400" />;
+    if (rank === 3) return <Medal className="h-5 w-5 text-amber-700" />;
+    return null;
+  };
 
-  const isCurrentUser = (playerId: string) => playerId === currentUserId
+  const isCurrentUser = (playerId: string) => playerId === currentUserId;
 
   return (
     <Card className="border-zinc-800 bg-zinc-900 p-4">
-      <h2 className="font-serif text-xl font-semibold">
-        Top Rankings
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-serif text-xl font-semibold">Top Rankings</h2>
+        <Link href="/users" className="text-sm hover:text-primary hover:underline">
+          All Users
+        </Link>
+      </div>
 
       <div className="space-y-3">
         {players.map((player, index) => {
-          const rank = index + 1
-          const highlighted = isCurrentUser(player.id)
-          const playerTier = getPlayerTier(player.rating)
+          const rank = index + 1;
+          const highlighted = isCurrentUser(player.id);
+          const playerTier = getPlayerTier(player.rating);
 
           return (
             <Link
@@ -52,7 +55,9 @@ export function TopRankings({ players, currentUserRank }: TopRankingsProps) {
               {/* Rank */}
               <div className="flex w-8 items-center justify-center">
                 {getRankIcon(rank) || (
-                  <span className="text-lg font-semibold text-zinc-400">{rank}</span>
+                  <span className="text-lg font-semibold text-zinc-400">
+                    {rank}
+                  </span>
                 )}
               </div>
 
@@ -75,7 +80,9 @@ export function TopRankings({ players, currentUserRank }: TopRankingsProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-white">{player.name}</span>
-                  <span className={`text-xs size-5 inline-flex items-center justify-center rounded-full ${getTierBadgeClasses(playerTier)}`}>
+                  <span
+                    className={`text-xs size-5 inline-flex items-center justify-center rounded-full ${getTierBadgeClasses(playerTier)}`}
+                  >
                     {playerTier.emoji}
                   </span>
                 </div>
@@ -90,7 +97,7 @@ export function TopRankings({ players, currentUserRank }: TopRankingsProps) {
                 <div className="text-xs text-zinc-500">rating</div>
               </div>
             </Link>
-          )
+          );
         })}
 
         {/* Current user rank if not in top 8 */}
@@ -98,11 +105,13 @@ export function TopRankings({ players, currentUserRank }: TopRankingsProps) {
           <div className="mt-4 border-t border-zinc-700 pt-4">
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <span>Your current rank:</span>
-              <span className="font-semibold text-primary">#{currentUserRank}</span>
+              <span className="font-semibold text-primary">
+                #{currentUserRank}
+              </span>
             </div>
           </div>
         )}
       </div>
     </Card>
-  )
+  );
 }

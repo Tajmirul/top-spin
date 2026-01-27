@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button";
 import { SubmitResultModal } from "@/components/submit-result-modal";
 import { LogOut, Shield } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
 export function DashboardNav() {
   const { data: session } = useSession();
-  const pathname = usePathname();
   const [isSubmitResultModalOpen, setIsSubmitResultModalOpen] = useState(false);
-  
+
   const isAdmin = session?.user?.role === UserRole.ADMIN;
 
   return (
@@ -31,25 +29,10 @@ export function DashboardNav() {
                   width={32}
                   height={32}
                 />
-                <span className="font-serif text-xl font-semibold">TopSpin</span>
+                <span className="font-serif text-xl font-semibold">
+                  TopSpin
+                </span>
               </Link>
-              
-              {/* Admin Navigation */}
-              {isAdmin && (
-                <div className="hidden md:flex items-center gap-2">
-                  <Link
-                    href="/admin/users"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
-                      pathname === "/admin/users"
-                        ? "bg-amber-500/10 text-amber-500"
-                        : "text-zinc-400 hover:text-amber-500 hover:bg-amber-500/5"
-                    }`}
-                  >
-                    <Shield className="h-4 w-4" />
-                    Admin
-                  </Link>
-                </div>
-              )}
             </div>
 
             {/* Right side */}

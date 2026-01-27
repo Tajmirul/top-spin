@@ -10,8 +10,9 @@ import { toast } from "sonner";
 import { CreateUserModal } from "./create-user-modal";
 import Link from "next/link";
 import { User, UserRole } from "@prisma/client";
+import { useUser } from "@/hooks/useUser";
 
-interface AdminUsersTableProps {
+interface UsersTableProps {
   users: (Pick<
     User,
     "id" | "email" | "name" | "image" | "rating" | "role" | "createdAt"
@@ -22,7 +23,8 @@ interface AdminUsersTableProps {
   })[];
 }
 
-export function AdminUsersTable({ users: initialUsers }: AdminUsersTableProps) {
+function UsersTable({ users: initialUsers }: UsersTableProps) {
+  const { user: authUser } = useUser();
   const [users, setUsers] = useState(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -87,13 +89,15 @@ export function AdminUsersTable({ users: initialUsers }: AdminUsersTableProps) {
               className="pl-10 border-zinc-700 bg-zinc-800 text-white"
             />
           </div>
-          <Button
-            onClick={() => setShowCreateUser(true)}
-            className="bg-primary text-zinc-950 hover:bg-primary/90"
-          >
-            <UserCog className="h-4 w-4 mr-2" />
-            Create User
-          </Button>
+          {authUser?.role === UserRole.ADMIN && (
+            <Button
+              onClick={() => setShowCreateUser(true)}
+              className="bg-primary text-zinc-950 hover:bg-primary/90"
+            >
+              <UserCog className="h-4 w-4 mr-2" />
+              Create User
+            </Button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -106,7 +110,9 @@ export function AdminUsersTable({ users: initialUsers }: AdminUsersTableProps) {
                 <th className="pb-3 font-medium">Matches</th>
                 <th className="pb-3 font-medium">Win Rate</th>
                 <th className="pb-3 font-medium">Role</th>
-                <th className="pb-3 font-medium">Actions</th>
+                {authUser?.role === UserRole.ADMIN && (
+                  <th className="pb-3 font-medium">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -172,24 +178,26 @@ export function AdminUsersTable({ users: initialUsers }: AdminUsersTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="py-3">
-                    <Button
-                      size="sm"
-                      onClick={() => handleToggleRole(user.id, user.role)}
-                      disabled={updatingRole === user.id}
-                      className="text-xs bg-zinc-700 text-white hover:bg-zinc-600"
-                    >
-                      {updatingRole === user.id ? (
-                        "Updating..."
-                      ) : (
-                        <>
-                          {user.role === UserRole.ADMIN
-                            ? "Remove Admin"
-                            : "Make Admin"}
-                        </>
-                      )}
-                    </Button>
-                  </td>
+                  {authUser?.role === UserRole.ADMIN && (
+                    <td className="py-3">
+                      <Button
+                        size="sm"
+                        onClick={() => handleToggleRole(user.id, user.role)}
+                        disabled={updatingRole === user.id}
+                        className="text-xs bg-zinc-700 text-white hover:bg-zinc-600"
+                      >
+                        {updatingRole === user.id ? (
+                          "Updating..."
+                        ) : (
+                          <>
+                            {user.role === UserRole.ADMIN
+                              ? "Remove Admin"
+                              : "Make Admin"}
+                          </>
+                        )}
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -216,3 +224,5 @@ export function AdminUsersTable({ users: initialUsers }: AdminUsersTableProps) {
     </>
   );
 }
+
+export default UsersTable;
